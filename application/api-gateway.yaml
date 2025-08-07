@@ -5,19 +5,28 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/3-mnms/devops.git  
-    targetRevision: main
-    path: charts/api/charts/gateway  
-    helm:
-      valueFiles:
-        - ../values/api/gateway/values-prod.yaml  
-        - ../values-prod.yaml
-
   destination:
     server: https://kubernetes.default.svc
     namespace: gateway
-
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/api/charts/gateway
+    helm:
+      valueFiles:
+        - $values-repo/values/api/gateway/values-prod.yaml
+        - $values-repo/values/values-prod.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/api/charts/gateway
+      helm:
+        valueFiles:
+          - $values-repo/values/api/gateway/values-prod.yaml
+          - $values-repo/values/values-prod.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: feature/MNMS-276
+      ref: values-repo
   syncPolicy:
     automated:
       prune: true

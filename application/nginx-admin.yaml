@@ -5,19 +5,28 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/3-mnms/devops.git  
-    targetRevision: main
-    path: charts/nginx-admin  
-    helm:
-      valueFiles:
-        - ../values/nginx-admin/values-prod.yaml  
-        - ../values-prod.yaml
-
   destination:
     server: https://kubernetes.default.svc
     namespace: nginx-admin
-
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/nginx-admin
+    helm:
+      valueFiles:
+        - $values-repo/values/api/nginx-admin/values-prod.yaml
+        - $values-repo/values/values-prod.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/nginx-admin
+      helm:
+        valueFiles:
+          - $values-repo/values/nginx-admin/values-prod.yaml
+          - $values-repo/values/values-prod.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: feature/MNMS-276
+      ref: values-repo
   syncPolicy:
     automated:
       prune: true
