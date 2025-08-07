@@ -1,1 +1,1 @@
-# GitOps Values Repository
+# gitops-repo
