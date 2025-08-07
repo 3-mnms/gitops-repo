@@ -11,8 +11,8 @@ spec:
     path: charts/api/charts/booking  
     helm:
       valueFiles:
-        - ../values/api/booking/values.yaml  
-        - ../values.yaml
+        - ../values/api/booking/values-prod.yaml  
+        - ../values-prod.yaml
 
   destination:
     server: https://kubernetes.default.svc

@@ -11,8 +11,8 @@ spec:
     path: charts/api/charts/payment  
     helm:
       valueFiles:
-        - ../values/api/payment/values.yaml  
-        - ../values.yaml
+        - ../values/api/payment/values-prod.yaml  
+        - ../values-prod.yaml
 
   destination:
     server: https://kubernetes.default.svc

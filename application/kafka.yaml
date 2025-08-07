@@ -11,8 +11,8 @@ spec:
     path: charts/kafka  
     helm:
       valueFiles:
-        - ../values/kafka/values.yaml  
-        - ../values.yaml
+        - ../values/kafka/values-prod.yaml  
+        - ../values-prod.yaml
 
   destination:
     server: https://kubernetes.default.svc

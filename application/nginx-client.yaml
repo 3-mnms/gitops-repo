@@ -11,8 +11,8 @@ spec:
     path: charts/nginx-client  
     helm:
       valueFiles:
-        - ../values/nginx-client/values.yaml  
-        - ../values.yaml
+        - ../values/nginx-client/values-prod.yaml  
+        - ../values-prod.yaml
 
   destination:
     server: https://kubernetes.default.svc

@@ -11,8 +11,8 @@ spec:
     path: charts/api/charts/gateway  
     helm:
       valueFiles:
-        - ../values/api/gateway/values.yaml  
-        - ../values.yaml
+        - ../values/api/gateway/values-prod.yaml  
+        - ../values-prod.yaml
 
   destination:
     server: https://kubernetes.default.svc
