@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-gateway
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/3-mnms/devops.git  
+    targetRevision: main
+    path: charts/api/charts/gateway  
+    helm:
+      valueFiles:
+        - ../values/api/gateway/values.yaml  
+        - ../values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gateway
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
