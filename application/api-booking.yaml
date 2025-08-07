@@ -5,22 +5,24 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/3-mnms/devops.git  
-    targetRevision: main
-    path: charts/api/charts/booking  
-    helm:
-      valueFiles:
-        - ../values/api/booking/values-prod.yaml  
-        - ../values-prod.yaml
-
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: main
+      ref: helm-chart
+      path: charts/api/charts/booking
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: main
+      ref: values-repo
   destination:
     server: https://kubernetes.default.svc
     namespace: booking
-
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  helm: # ⬅️ 'sources' 필드 아래에 'helm' 필드를 위치
+    releaseName: booking-prod
+    valueFiles:
+      - $values-repo/values/api/booking/values-prod.yaml
