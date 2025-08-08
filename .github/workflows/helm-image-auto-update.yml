@@ -1,0 +1,46 @@
+name: 🔄 Helm 이미지 태그 자동 반영
+run-name: "🔄 ${{ github.event.client_payload.service }} – ${{ github.event.client_payload.tag }}"
+
+on:
+  repository_dispatch:
+    types: [ image-updated ]
+
+jobs:
+  patch:
+    name: "patch-${{ github.event.client_payload.service }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: map
+        run: |
+          declare -A MAP=( \
+            [fe-user]="values/nginx-client/values.yaml" \
+            [fe-admin]="values/nginx-admin/values.yaml" \
+            [booking]="values/api/booking/values-prod.yaml" \
+            [festival]="values/api/festival/values-prod.yaml" \
+            [payment]="values/api/payment/values-prod.yaml" \
+            [gateway]="values/api/gateway/values-prod.yaml" \
+            [infra]="values/infra/values-prod.yaml" \
+            [api]="values/api/values-prod.yaml" \
+            [payment-test]="values/api/payment/values-test.yaml" \
+          )
+          echo "file=${MAP[${{ github.event.client_payload.service }}]}" >> "$GITHUB_OUTPUT"
+
+      - name: 이미지 태그 갱신
+        env:
+          IMG: ${{ github.event.client_payload.image }}
+          TAG: ${{ github.event.client_payload.tag }}
+        run: |
+          yq -i '
+            (.image.repository) = strenv(IMG) |
+            (.image.tag)        = strenv(TAG)
+          ' "${{ steps.map.outputs.file }}"
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: |
+            chore(helm): ${{ github.event.client_payload.service }} 이미지 태그 → ${{ github.event.client_payload.tag }}
+          file_pattern: ${{ steps.map.outputs.file }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
