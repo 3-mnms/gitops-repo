@@ -4,27 +4,32 @@ run-name: "🔄 ${{ github.event.client_payload.service }} – ${{ github.event.
 on:
   repository_dispatch:
     types: [ image-updated ]
+  workflow_dispatch: {}
 
 permissions:
   contents: write
+
+env:
+  TARGET_BRANCH: ${{ github.event.client_payload.targetBranch || 'feature/MNMS-299' }}
 
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
 
-      # yq 설치 (러너 기본 미탑재)
       - name: Install yq
         run: |
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
           yq --version
 
-      # 서비스 → 파일 경로 / 루트키 매핑
       - id: map
         run: |
-          # values 파일 경로
+          # 파일 경로 매핑 (prod만 사용)
           declare -A FILE=( \
             [fe-user]="values/nginx-client/values.yaml" \
             [fe-admin]="values/nginx-admin/values.yaml" \
@@ -34,9 +39,8 @@ jobs:
             [gateway]="values/api/gateway/values-prod.yaml" \
             [infra]="values/infra/values-prod.yaml" \
             [api]="values/api/values-prod.yaml" \
-            [payment-test]="values/api/payment/values-test.yaml" \
           )
-          # 루트 키 (중첩 스키마용)
+          # 루트 키 매핑
           declare -A ROOT=( \
             [fe-user]="" \
             [fe-admin]="" \
@@ -46,7 +50,6 @@ jobs:
             [gateway]="apiGateway" \
             [infra]="" \
             [api]="" \
-            [payment-test]="apiPayment" \
           )
 
           svc="${{ github.event.client_payload.service }}"
@@ -62,7 +65,6 @@ jobs:
           echo "root=$root" >> "$GITHUB_OUTPUT"
           echo "Mapped $svc -> file=$file root=$root"
 
-      # 이미지 repo/tag 패치 (registry는 건드리지 않음)
       - name: Patch values
         env:
           IMG:  ${{ github.event.client_payload.image }}
@@ -71,30 +73,24 @@ jobs:
           ROOT: ${{ steps.map.outputs.root }}
         run: |
           set -euo pipefail
-          echo "Target file: $FILE"
-          echo "Root key   : ${ROOT:-<none>}"
           if [[ -z "${ROOT}" ]]; then
-            # 루트키 없는 구조 (nginx 등)
             yq -i '
               .image.repository = strenv(IMG) |
               .image.tag        = strenv(TAG)
             ' "$FILE"
           else
-            # 루트키 있는 구조 (apiPayment/apiGateway/apiFestival/apiBooking 등)
             yq -i '
               .[strenv(ROOT)].image.repository = strenv(IMG) |
               .[strenv(ROOT)].image.tag        = strenv(TAG)
             ' "$FILE"
           fi
-          echo "---- after patch ----"
-          yq '. | .. style="flow"' "$FILE" >/dev/null || true
 
-      # 변경사항 커밋
       - name: Auto commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          branch: ${{ env.TARGET_BRANCH }}
           commit_message: |
-            chore(helm): ${{ github.event.client_payload.service }} 이미지 태그 → ${{ github.event.client_payload.tag }}
+            MNMS-302 chore(helm): ${{ github.event.client_payload.service }} 이미지 태그 → ${{ github.event.client_payload.tag }}
           file_pattern: ${{ steps.map.outputs.file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
