@@ -1,16 +1,13 @@
 apiPayment:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
-    repository: api-payment
-    tag: test
+    repository: rookiesdogun/api-payment
+    tag: test-20250808071455
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
   database:
     host: api-payment-database-service
     port: 3306

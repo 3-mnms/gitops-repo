@@ -67,23 +67,45 @@ jobs:
 
       - name: Patch values
         env:
-          IMG:  ${{ github.event.client_payload.image }}
+          IMG:  ${{ github.event.client_payload.image }}  # 예: rookiesdogun/api-payment
           TAG:  ${{ github.event.client_payload.tag }}
           FILE: ${{ steps.map.outputs.file }}
           ROOT: ${{ steps.map.outputs.root }}
         run: |
           set -euo pipefail
+          REPO_ONLY="${IMG##*/}"  # api-payment
+
+          # ROOT 유무 + registry 유무에 따라 repository 값을 결정
           if [[ -z "${ROOT}" ]]; then
-            yq -i '
-              .image.repository = strenv(IMG) |
-              .image.tag        = strenv(TAG)
-            ' "$FILE"
+            # 루트키 없는 구조 (nginx 등)
+            if yq -e '.image | has("registry")' "$FILE" >/dev/null 2>&1; then
+              # registry 키가 있으면 repository에는 '이름'만
+              yq -i '
+                .image.repository = strenv(REPO_ONLY) |
+                .image.tag        = strenv(TAG)
+              ' "$FILE"
+            else
+              # registry 키가 없으면 repository에 풀네임
+              yq -i '
+                .image.repository = strenv(IMG) |
+                .image.tag        = strenv(TAG)
+              ' "$FILE"
+            fi
           else
-            yq -i '
-              .[strenv(ROOT)].image.repository = strenv(IMG) |
-              .[strenv(ROOT)].image.tag        = strenv(TAG)
-            ' "$FILE"
+            # 루트키 있는 구조 (apiPayment/apiGateway/apiFestival/apiBooking 등)
+            if yq -e '.[strenv(ROOT)].image | has("registry")' "$FILE" >/dev/null 2>&1; then
+              yq -i '
+                .[strenv(ROOT)].image.repository = strenv(REPO_ONLY) |
+                .[strenv(ROOT)].image.tag        = strenv(TAG)
+              ' "$FILE"
+            else
+              yq -i '
+                .[strenv(ROOT)].image.repository = strenv(IMG) |
+                .[strenv(ROOT)].image.tag        = strenv(TAG)
+              ' "$FILE"
+            fi
           fi
+
 
       - name: Auto commit
         uses: stefanzweifel/git-auto-commit-action@v5
