@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/kafka
+    helm:
+      valueFiles:
+        - $values-repo/values/kafka/values-prod.yaml
+        - $values-repo/values/values-prod.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/kafka
+      helm:
+        valueFiles:
+          - $values-repo/values/kafka/values-prod.yaml
+          - $values-repo/values/values-prod.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: feature/MNMS-299
+      ref: values-repo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
