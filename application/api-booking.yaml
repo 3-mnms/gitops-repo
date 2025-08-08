@@ -25,7 +25,7 @@ spec:
           - $values-repo/values/api/booking/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-276
+      targetRevision: feature/MNMS-299
       ref: values-repo
   syncPolicy:
     automated:
