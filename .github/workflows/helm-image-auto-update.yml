@@ -5,6 +5,9 @@ on:
   repository_dispatch:
     types: [ image-updated ]
 
+permissions:
+  contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -93,3 +96,5 @@ jobs:
           commit_message: |
             chore(helm): ${{ github.event.client_payload.service }} 이미지 태그 → ${{ github.event.client_payload.tag }}
           file_pattern: ${{ steps.map.outputs.file }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
