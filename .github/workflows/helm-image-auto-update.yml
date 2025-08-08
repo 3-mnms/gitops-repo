@@ -67,44 +67,47 @@ jobs:
 
       - name: Patch values
         env:
-          IMG:  ${{ github.event.client_payload.image }}  # 예: rookiesdogun/api-payment
+          IMG:  ${{ github.event.client_payload.image }}   # ex) rookiesdogun/api-payment
           TAG:  ${{ github.event.client_payload.tag }}
           FILE: ${{ steps.map.outputs.file }}
-          ROOT: ${{ steps.map.outputs.root }}
+          ROOT: ${{ steps.map.outputs.root }}              # ex) apiPayment / ""(없음)
         run: |
           set -euo pipefail
-          REPO_ONLY="${IMG##*/}"  # api-payment
 
-          # ROOT 유무 + registry 유무에 따라 repository 값을 결정
+          REPO_ONLY="${IMG##*/}"  # ex) api-payment
+          # image 노드의 절대 경로: .image 또는 .<root>.image
           if [[ -z "${ROOT}" ]]; then
-            # 루트키 없는 구조 (nginx 등)
-            if yq -e '.image | has("registry")' "$FILE" >/dev/null 2>&1; then
-              # registry 키가 있으면 repository에는 '이름'만
-              yq -i '
-                .image.repository = strenv(REPO_ONLY) |
-                .image.tag        = strenv(TAG)
-              ' "$FILE"
-            else
-              # registry 키가 없으면 repository에 풀네임
-              yq -i '
-                .image.repository = strenv(IMG) |
-                .image.tag        = strenv(TAG)
-              ' "$FILE"
-            fi
+            BPATH='.image'
           else
-            # 루트키 있는 구조 (apiPayment/apiGateway/apiFestival/apiBooking 등)
-            if yq -e '.[strenv(ROOT)].image | has("registry")' "$FILE" >/dev/null 2>&1; then
-              yq -i '
-                .[strenv(ROOT)].image.repository = strenv(REPO_ONLY) |
-                .[strenv(ROOT)].image.tag        = strenv(TAG)
-              ' "$FILE"
-            else
-              yq -i '
-                .[strenv(ROOT)].image.repository = strenv(IMG) |
-                .[strenv(ROOT)].image.tag        = strenv(TAG)
-              ' "$FILE"
-            fi
+            BPATH=".[\"${ROOT}\"].image"
           fi
+
+          echo "FILE=${FILE}"
+          echo "BPATH=${BPATH}"
+          echo "IMG=${IMG}"
+          echo "REPO_ONLY=${REPO_ONLY}"
+          echo "TAG=${TAG}"
+
+          if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
+            # registry가 있으면 repository에는 '이름'만
+            yq -i "
+              ${BPATH}.repository = env(REPO_ONLY) |
+              ${BPATH}.tag        = env(TAG)
+            " "$FILE"
+          else
+            # registry가 없으면 repository에는 '풀네임'
+            yq -i "
+              ${BPATH}.repository = env(IMG) |
+              ${BPATH}.tag        = env(TAG)
+            " "$FILE"
+          fi
+
+          FINAL_REPO=$(yq -r "${BPATH}.repository // \"\"" "$FILE")
+          if [[ -z "${FINAL_REPO}" ]]; then
+            echo "❌ repository resolved to empty. Abort."; exit 1
+          fi
+          echo "✅ repository=${FINAL_REPO}"
+
 
 
       - name: Auto commit

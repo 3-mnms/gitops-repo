@@ -2,8 +2,8 @@ apiPayment:
   replicaCount: 1
   image:
     registry: rookiesdogun
-    repository: rookiesdogun/api-payment
-    tag: test-20250808071455
+    repository: api-payment
+    tag: v20250808071455
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
