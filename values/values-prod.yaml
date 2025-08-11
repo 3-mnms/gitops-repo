@@ -19,3 +19,7 @@ global:
     admin: nginx-admin-service
   apiGateway:
     serviceLabel: expose-via-spring-gateway
+
+  
+  namespace:
+    infra: infra
