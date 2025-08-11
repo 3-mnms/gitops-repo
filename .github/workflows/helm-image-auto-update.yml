@@ -37,7 +37,7 @@ jobs:
             [festival]="values/api/festival/values-prod.yaml" \
             [payment]="values/api/payment/values-prod.yaml" \
             [gateway]="values/api/gateway/values-prod.yaml" \
-            [user]="values/api/user/value-prod.yaml" \
+            [user]="values/api/user/values-prod.yaml" \
             [infra]="values/infra/values-prod.yaml" \
             [api]="values/api/values-prod.yaml" \
           )
