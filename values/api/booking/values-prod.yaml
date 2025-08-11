@@ -1,16 +1,13 @@
 apiBooking:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: api-booking
-    tag: test
+    tag: v20250811012137
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
   database:
     host: api-booking-database-service
     port: 3306
