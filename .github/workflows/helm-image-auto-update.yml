@@ -37,6 +37,7 @@ jobs:
             [festival]="values/api/festival/values-prod.yaml" \
             [payment]="values/api/payment/values-prod.yaml" \
             [gateway]="values/api/gateway/values-prod.yaml" \
+            [user]="values/api/user/values-prod.yaml" \
             [infra]="values/infra/values-prod.yaml" \
             [api]="values/api/values-prod.yaml" \
           )
@@ -48,6 +49,7 @@ jobs:
             [festival]="apiFestival" \
             [payment]="apiPayment" \
             [gateway]="apiGateway" \
+            [user]="apiUser" \
             [infra]="" \
             [api]="" \
           )
@@ -75,9 +77,6 @@ jobs:
           set -euo pipefail
 
           REPO_ONLY="${IMG##*/}"  # ex) api-payment
-          # yq의 env()에서 읽을 수 있도록 export
-          export REPO_ONLY IMG TAG
-          
           # image 노드의 절대 경로: .image 또는 .<root>.image
           if [[ -z "${ROOT}" ]]; then
             BPATH='.image'
