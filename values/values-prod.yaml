@@ -24,4 +24,4 @@ global:
   namespace:
     infra: infra
     
-  url: rookies-tekcit.com
+  domain: rookies-tekcit.com
