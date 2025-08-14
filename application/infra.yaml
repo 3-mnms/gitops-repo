@@ -1,31 +1,31 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: api-gateway
+  name: infra
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: gateway
+    namespace: infra
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/api/charts/gateway
+    path: charts/infra
     helm:
       valueFiles:
-        - $values-repo/values/api/gateway/values-prod.yaml
+        - $values-repo/values/infra/values-prod.yaml
         - $values-repo/values/values-prod.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/api/charts/gateway
+      path: charts/infra
       helm:
         valueFiles:
-          - $values-repo/values/api/gateway/values-prod.yaml
+          - $values-repo/values/infra/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-299
+      targetRevision: feature/MNMS-313
       ref: values-repo
   syncPolicy:
     automated:

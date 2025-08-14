@@ -1,0 +1,121 @@
+name: "🔄 Helm 이미지 태그 자동 반영"
+run-name: "🔄 ${{ github.event.client_payload.service }} – ${{ github.event.client_payload.tag }}"
+
+on:
+  repository_dispatch:
+    types: [ image-updated ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  TARGET_BRANCH: ${{ github.event.client_payload.targetBranch || 'feature/MNMS-299' }}
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      - id: map
+        run: |
+          # 파일 경로 매핑 (prod만 사용)
+          declare -A FILE=( \
+            [fe-user]="values/nginx-client/values.yaml" \
+            [fe-admin]="values/nginx-admin/values.yaml" \
+            [booking]="values/api/booking/values-prod.yaml" \
+            [festival]="values/api/festival/values-prod.yaml" \
+            [payment]="values/api/payment/values-prod.yaml" \
+            [gateway]="values/api/gateway/values-prod.yaml" \
+            [infra]="values/infra/values-prod.yaml" \
+            [api]="values/api/values-prod.yaml" \
+          )
+          # 루트 키 매핑
+          declare -A ROOT=( \
+            [fe-user]="" \
+            [fe-admin]="" \
+            [booking]="apiBooking" \
+            [festival]="apiFestival" \
+            [payment]="apiPayment" \
+            [gateway]="apiGateway" \
+            [infra]="" \
+            [api]="" \
+          )
+
+          svc="${{ github.event.client_payload.service }}"
+          file="${FILE[$svc]}"
+          root="${ROOT[$svc]}"
+
+          if [[ -z "$file" ]]; then
+            echo "Unknown service: $svc" >&2
+            exit 1
+          fi
+
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          echo "root=$root" >> "$GITHUB_OUTPUT"
+          echo "Mapped $svc -> file=$file root=$root"
+
+      - name: Patch values
+        env:
+          IMG:  ${{ github.event.client_payload.image }}   # ex) rookiesdogun/api-payment
+          TAG:  ${{ github.event.client_payload.tag }}
+          FILE: ${{ steps.map.outputs.file }}
+          ROOT: ${{ steps.map.outputs.root }}              # ex) apiPayment / ""(없음)
+        run: |
+          set -euo pipefail
+
+          REPO_ONLY="${IMG##*/}"  # ex) api-payment
+          # image 노드의 절대 경로: .image 또는 .<root>.image
+          if [[ -z "${ROOT}" ]]; then
+            BPATH='.image'
+          else
+            BPATH=".[\"${ROOT}\"].image"
+          fi
+
+          echo "FILE=${FILE}"
+          echo "BPATH=${BPATH}"
+          echo "IMG=${IMG}"
+          echo "REPO_ONLY=${REPO_ONLY}"
+          echo "TAG=${TAG}"
+
+          if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
+            # registry가 있으면 repository에는 '이름'만
+            yq -i "
+              ${BPATH}.repository = env(REPO_ONLY) |
+              ${BPATH}.tag        = env(TAG)
+            " "$FILE"
+          else
+            # registry가 없으면 repository에는 '풀네임'
+            yq -i "
+              ${BPATH}.repository = env(IMG) |
+              ${BPATH}.tag        = env(TAG)
+            " "$FILE"
+          fi
+
+          FINAL_REPO=$(yq -r "${BPATH}.repository // \"\"" "$FILE")
+          if [[ -z "${FINAL_REPO}" ]]; then
+            echo "❌ repository resolved to empty. Abort."; exit 1
+          fi
+          echo "✅ repository=${FINAL_REPO}"
+
+
+
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ env.TARGET_BRANCH }}
+          commit_message: |
+            MNMS-302 chore(helm): ${{ github.event.client_payload.service }} 이미지 태그 → ${{ github.event.client_payload.tag }}
+          file_pattern: ${{ steps.map.outputs.file }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
