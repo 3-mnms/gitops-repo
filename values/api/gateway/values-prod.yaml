@@ -5,7 +5,7 @@ apiGateway:
     tag: test
     pullPolicy: IfNotPresent
   spring:
-    profiles: local
+    profiles: prod
   resources:
     requests:
       cpu: "256m"
@@ -22,7 +22,7 @@ apiGateway:
 
 
   ingress:
-    mode: gce
+    mode: aws
     gce:
       ipName: rookies-tekcit-static-ip
       backendConfigName: api-gateway-backendconfig
