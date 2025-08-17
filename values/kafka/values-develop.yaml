@@ -12,12 +12,12 @@ kafka:
 
   persistence:
     enabled: true
-    storageClass: "hostpath" 
+    storageClass: "standard" 
     size: 10Gi 
 
   kraftPersistence: 
     enabled: true
-    storageClass: "hostpath" 
+    storageClass: "standard" 
     size: 1Gi 
 
   service:
