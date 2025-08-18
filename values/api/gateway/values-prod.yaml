@@ -5,7 +5,7 @@ apiGateway:
     tag: test
     pullPolicy: IfNotPresent
   spring:
-    profiles: prod
+    profiles: local
   resources:
     requests:
       cpu: "256m"
@@ -17,19 +17,23 @@ apiGateway:
 
   service:
     type: ClusterIP
-    port: 8080
+    port: 80
     targetPort: 8080
 
 
   ingress:
     mode: aws
-    gce:
-      ipName: rookies-tekcit-static-ip
-      backendConfigName: api-gateway-backendconfig
-    path: /
-    pathType: Prefix
     port:
       http: 80
       https: 443
-    tls: false
-    tlsSecret: api-gateway-tls-secret
+    path: /
+    pathType: Prefix
+    tls: true
+
+    gce:
+      ipName: rookies-tekcit-static-ip
+      backendConfigName: api-gateway-backendconfig
+      tlsSecret: api-gateway-tls-secret
+    aws:
+      scheme: "internal-facing" 
+      certificateArn: "none"
