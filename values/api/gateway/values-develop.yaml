@@ -28,7 +28,7 @@ apiGateway:
       https: 443
     path: /
     pathType: Prefix
-    tls: true
+    tls: false
 
     gce:
       ipName: rookies-tekcit-static-ip
