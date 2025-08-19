@@ -1,35 +1,35 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-client
+  name: infra
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: nginx-client
+    namespace: infra
   source:
     repoURL: https://github.com/3-mnms/devops.git
-    targetRevision: develop
-    path: charts/nginx-client
+    targetRevision: main
+    path: charts/infra
     helm:
       valueFiles:
-        - $values-repo/values/api/nginx-client/values-prod.yaml
+        - $values-repo/values/infra/values-prod.yaml
         - $values-repo/values/values-prod.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
-      targetRevision: develop
-      path: charts/nginx-client
+      targetRevision: main
+      path: charts/infra
       helm:
         valueFiles:
-          - $values-repo/values/nginx-client/values-prod.yaml
+          - $values-repo/values/infra/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-299
+      targetRevision: main
       ref: values-repo
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true7
