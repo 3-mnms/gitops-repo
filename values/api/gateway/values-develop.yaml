@@ -22,7 +22,7 @@ apiGateway:
 
 
   ingress:
-    mode: aws
+    mode: gce
     port:
       http: 80
       https: 443

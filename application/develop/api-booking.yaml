@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-booking
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/api/charts/booking
+    helm:
+      valueFiles:
+        - $values-repo/values/api/booking/values-develop.yaml
+        - $values-repo/values/values-develop.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/api/charts/booking
+      helm:
+        valueFiles:
+          - $values-repo/values/api/booking/values-develop.yaml
+          - $values-repo/values/values-develop.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: develop
+      ref: values-repo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

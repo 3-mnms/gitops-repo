@@ -14,18 +14,18 @@ spec:
     path: charts/api/charts/gateway
     helm:
       valueFiles:
-        - $values-repo/values/api/gateway/values-prod.yaml
-        - $values-repo/values/values-prod.yaml
+        - $values-repo/values/api/gateway/values-develop.yaml
+        - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
       path: charts/api/charts/gateway
       helm:
         valueFiles:
-          - $values-repo/values/api/gateway/values-prod.yaml
-          - $values-repo/values/values-prod.yaml
+          - $values-repo/values/api/gateway/values-develop.yaml
+          - $values-repo/values/values-develop.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-299
+      targetRevision: develop
       ref: values-repo
   syncPolicy:
     automated:

@@ -1,31 +1,31 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kafka
+  name: api-booking
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: kafka
+    namespace: booking
   source:
     repoURL: https://github.com/3-mnms/devops.git
-    targetRevision: develop
-    path: charts/kafka
+    targetRevision: main
+    path: charts/api/charts/booking
     helm:
       valueFiles:
-        - $values-repo/values/kafka/values-prod.yaml
+        - $values-repo/values/api/booking/values-prod.yaml
         - $values-repo/values/values-prod.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
-      targetRevision: develop
-      path: charts/kafka
+      targetRevision: main
+      path: charts/api/charts/booking
       helm:
         valueFiles:
-          - $values-repo/values/kafka/values-prod.yaml
+          - $values-repo/values/api/booking/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-299
+      targetRevision: main
       ref: values-repo
   syncPolicy:
     automated:

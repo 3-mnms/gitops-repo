@@ -1,31 +1,31 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-admin
+  name: api-user
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: nginx-admin
+    namespace: user
   source:
     repoURL: https://github.com/3-mnms/devops.git
-    targetRevision: develop
-    path: charts/nginx-admin
+    targetRevision: main
+    path: charts/api/charts/user
     helm:
       valueFiles:
-        - $values-repo/values/api/nginx-admin/values-prod.yaml
+        - $values-repo/values/api/user/values-prod.yaml
         - $values-repo/values/values-prod.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
-      targetRevision: develop
-      path: charts/nginx-admin
+      targetRevision: main
+      path: charts/api/charts/user
       helm:
         valueFiles:
-          - $values-repo/values/nginx-admin/values-prod.yaml
+          - $values-repo/values/api/user/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-299
+      targetRevision: main
       ref: values-repo
   syncPolicy:
     automated:

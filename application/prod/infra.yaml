@@ -10,7 +10,7 @@ spec:
     namespace: infra
   source:
     repoURL: https://github.com/3-mnms/devops.git
-    targetRevision: develop
+    targetRevision: main
     path: charts/infra
     helm:
       valueFiles:
@@ -18,18 +18,18 @@ spec:
         - $values-repo/values/values-prod.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
-      targetRevision: develop
+      targetRevision: main
       path: charts/infra
       helm:
         valueFiles:
           - $values-repo/values/infra/values-prod.yaml
           - $values-repo/values/values-prod.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
-      targetRevision: feature/MNMS-313
+      targetRevision: main
       ref: values-repo
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true7
