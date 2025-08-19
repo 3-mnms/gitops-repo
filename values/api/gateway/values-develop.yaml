@@ -23,13 +23,17 @@ apiGateway:
 
   ingress:
     mode: gce
-    gce:
-      ipName: rookies-tekcit-static-ip
-      backendConfigName: api-gateway-backendconfig
-    path: /
-    pathType: Prefix
     port:
       http: 80
       https: 443
+    path: /
+    pathType: Prefix
     tls: false
-    tlsSecret: api-gateway-tls-secret
+
+    gce:
+      ipName: rookies-tekcit-static-ip
+      backendConfigName: api-gateway-backendconfig
+      tlsSecret: api-gateway-tls-secret
+    aws:
+      scheme: "internal-facing" 
+      certificateArn: "none"
