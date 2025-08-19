@@ -1,5 +1,5 @@
 name: "🔄 Helm 이미지 태그 자동 반영"
-run-name: "🔄 ${{ github.event.client_payload.service }} – ${{ github.event.client_payload.tag }} (${{ github.event.client_payload.env || 'develop' }})"
+run-name: "🔄 ${{ github.event.client_payload.service || inputs.service }} – ${{ github.event.client_payload.tag || inputs.tag }} (${{ github.event.client_payload.env || inputs.env || 'develop' }})"
 
 on:
   repository_dispatch:
@@ -8,7 +8,7 @@ on:
     inputs:
       service:
         required: false
-        description: "booking|festival|payment|gateway|user|fe-user|fe-admin"
+        description: "booking|festival|payment|gateway|user|nginx-client|fe-admin"
       image:
         required: false
         description: "ex) rookiesdogun/api-booking"
@@ -50,20 +50,29 @@ jobs:
           sudo chmod +x /usr/local/bin/yq
           yq --version
 
-      - name: Map service → file & root
+      - name: Map service → file & root (normalize alias)
         id: map
         env:
-          SERVICE: ${{ github.event.client_payload.service || inputs.service }}
-          ENV:     ${{ steps.cfg.outputs.env }}
+          IN_SVC: ${{ github.event.client_payload.service || inputs.service }}
+          ENV:    ${{ steps.cfg.outputs.env }}
         run: |
-          svc="${SERVICE}"
+          set -euo pipefail
+          svc_in="${IN_SVC:-}"
           env="${ENV}"
+
+          # 1) alias 정규화: fe-user → nginx-client
+          case "$svc_in" in
+            fe-user) svc="nginx-client" ;;
+            *)       svc="$svc_in"      ;;
+          esac
+
+          # 2) 서비스별 values 파일/루트키 매핑
           case "$svc" in
             booking|festival|payment|gateway|user)
               file="values/api/${svc}/values-${env}.yaml"
               root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
               ;;
-            fe-user)
+            nginx-client)
               file="values/nginx-client/values-${env}.yaml"
               root="nginxClient"
               ;;
@@ -71,12 +80,16 @@ jobs:
               file="values/nginx-admin/values-${env}.yaml"
               root="nginxAdmin"
               ;;
+            "")
+              echo "❌ service is empty"; exit 1 ;;
             *)
-              echo "❌ Unknown service: $svc" >&2; exit 1;;
+              echo "❌ Unknown service: $svc (input: ${svc_in})"; exit 1 ;;
           esac
-          echo "file=$file" >> $GITHUB_OUTPUT
-          echo "root=$root" >> $GITHUB_OUTPUT
-          echo "Mapped $svc → $file (root=$root)"
+
+          echo "svc_eff=$svc" >> $GITHUB_OUTPUT
+          echo "file=$file"   >> $GITHUB_OUTPUT
+          echo "root=$root"   >> $GITHUB_OUTPUT
+          echo "Mapped ${svc_in} → ${svc} → $file (root=$root)"
 
       - name: Ensure file exists
         run: |
@@ -96,10 +109,10 @@ jobs:
           [ -n "$IMG" ] || { echo "❌ image is empty"; exit 1; }
           [ -n "$TAG" ] || { echo "❌ tag is empty"; exit 1; }
 
-          REPO_ONLY="${IMG##*/}"  # rookiesdogun/api-booking → api-booking
+          REPO_ONLY="${IMG##*/}"
           if [ -z "$ROOT" ]; then BPATH='.image'; else BPATH=".[\"${ROOT}\"].image"; fi
 
-          # registry 키 유무에 따라 repository에 '짧은 이름' vs '풀네임' 적용
+          # registry 키 유무에 따라 repository에 짧은/풀 네임 적용
           if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
             yq -i "
               ${BPATH}.repository = \"${REPO_ONLY}\" |
@@ -118,5 +131,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           branch: ${{ steps.cfg.outputs.branch }}
-          commit_message: "chore(values): ${{ github.event.client_payload.service || inputs.service }} tag → ${{ github.event.client_payload.tag || inputs.tag }} [env:${{ steps.cfg.outputs.env }}]"
+          commit_message: "chore(values): ${{ steps.map.outputs.svc_eff }} tag → ${{ github.event.client_payload.tag || inputs.tag }} [env:${{ steps.cfg.outputs.env }}]"
           file_pattern: ${{ steps.map.outputs.file }}
