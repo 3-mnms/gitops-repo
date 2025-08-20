@@ -2,7 +2,7 @@ name: "🔄 Helm 이미지 태그 자동 반영"
 run-name: >
   🔄 ${{ github.event.client_payload.service || inputs.service }}
   – ${{ github.event.client_payload.tag || inputs.tag }}
-  (env: ${{ github.event.client_payload.env || inputs.env || 'develop' }})
+  (env: ${{ github.event.client_payload.env || inputs.env || 'develop-gke' }})
 
 on:
   repository_dispatch:
@@ -20,41 +20,37 @@ on:
         description: "ex) v20250812010101"
       env:
         required: false
-        description: "develop|develop-gke|develop-aws|prod"
-        default: "develop"
+        description: "develop-gke|develop-aws|prod"
+        default: "develop-gke"
 
 permissions:
   contents: write
 
 concurrency:
-  group: "patch-${{ github.event.client_payload.service || inputs.service }}-${{ github.event.client_payload.env || inputs.env || 'develop' }}"
+  group: "patch-${{ github.event.client_payload.service || inputs.service }}-${{ github.event.client_payload.env || inputs.env || 'develop-gke' }}"
   cancel-in-progress: true
 
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve env → effective file suffix & target branch
+      - name: Resolve env → file suffix & target branch
         id: cfg
         run: |
-          ENV_IN="${{ github.event.client_payload.env || inputs.env || 'develop' }}"
+          ENV_IN="${{ github.event.client_payload.env || inputs.env || 'develop-gke' }}"
           case "$ENV_IN" in
             prod)
-              ENV_EFF="prod"; BR="main"
-              ;;
-            develop|develop-gke)
-              ENV_EFF="develop-gke"; BR="develop"
-              ;;
+              ENV_EFF="prod"; BR="main" ;;
+            develop-gke)
+              ENV_EFF="develop-gke"; BR="develop" ;;
             develop-aws)
-              ENV_EFF="develop-aws"; BR="develop"
-              ;;
+              ENV_EFF="develop-aws"; BR="develop" ;;
             *)
-              echo "❌ invalid env: $ENV_IN (expected: develop|develop-gke|develop-aws|prod)"; exit 1
-              ;;
+              echo "❌ invalid env: $ENV_IN (expected: develop-gke|develop-aws|prod)"; exit 1 ;;
           esac
           echo "env_in=$ENV_IN"   >> $GITHUB_OUTPUT
-          echo "env=$ENV_EFF"     >> $GITHUB_OUTPUT   # values-${env}.yaml 에 사용
-          echo "branch=$BR"       >> $GITHUB_OUTPUT   # 체크아웃 브랜치
+          echo "env=$ENV_EFF"     >> $GITHUB_OUTPUT
+          echo "branch=$BR"       >> $GITHUB_OUTPUT
           echo "Resolved: input=$ENV_IN -> effective=$ENV_EFF, branch=$BR"
 
       - name: Checkout target branch
@@ -71,7 +67,7 @@ jobs:
       - name: Map service → values file & root key
         id: map
         env:
-          IN_SVC: ${{ github.event.client_payload.service || inputs.service }}
+          IN_SVC:  ${{ github.event.client_payload.service || inputs.service }}
           ENV_EFF: ${{ steps.cfg.outputs.env }}
         run: |
           set -euo pipefail
@@ -92,9 +88,9 @@ jobs:
               root="nginxAdmin"
               ;;
             "")
-              echo "❌ service is empty"; exit 1;;
+              echo "❌ service is empty"; exit 1 ;;
             *)
-              echo "❌ Unknown service: $svc"; exit 1;;
+              echo "❌ Unknown service: $svc"; exit 1 ;;
           esac
 
           echo "svc_eff=$svc" >> $GITHUB_OUTPUT
@@ -126,7 +122,7 @@ jobs:
           if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
             yq -i "
               ${BPATH}.repository = \"${REPO_ONLY}\" |
-              ${BPATH}.tag        = \"${TAG}\"
+              ${BATH}.tag        = \"${TAG}\"
             " "$FILE"
           else
             yq -i "
