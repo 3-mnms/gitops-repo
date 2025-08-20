@@ -1,12 +1,10 @@
 nginxClient:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: nginx-client
-    tag: latest
+    tag: v20250819075713
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 80
