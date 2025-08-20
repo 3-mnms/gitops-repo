@@ -4,7 +4,7 @@ apiUser:
   image:
     registry: rookiesdogun
     repository: api-user
-    tag: test
+    tag: v20250820060659
     pullPolicy: IfNotPresent
 
   service:
