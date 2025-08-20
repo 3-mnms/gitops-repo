@@ -52,5 +52,5 @@ apiBookingRedis:
 
   persistence:
     enabled: true
-    size: 8Gi
+    size: 7Gi
     storageClass: "gp2"
