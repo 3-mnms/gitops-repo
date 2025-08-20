@@ -1,5 +1,8 @@
 name: "🔄 Helm 이미지 태그 자동 반영"
-run-name: "🔄 ${{ github.event.client_payload.service || inputs.service }} – ${{ github.event.client_payload.tag || inputs.tag }} (${{ github.event.client_payload.env || inputs.env || 'develop' }})"
+run-name: >
+  🔄 ${{ github.event.client_payload.service || inputs.service }}
+  – ${{ github.event.client_payload.tag || inputs.tag }}
+  (env: ${{ github.event.client_payload.env || inputs.env || 'develop' }})
 
 on:
   repository_dispatch:
@@ -17,7 +20,7 @@ on:
         description: "ex) v20250812010101"
       env:
         required: false
-        description: "develop|prod"
+        description: "develop|develop-gke|develop-aws|prod"
         default: "develop"
 
 permissions:
@@ -31,13 +34,28 @@ jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve env & branch
+      - name: Resolve env → effective file suffix & target branch
         id: cfg
         run: |
-          ENV="${{ github.event.client_payload.env || inputs.env || 'develop' }}"
-          if [ "$ENV" = "prod" ]; then BR="main"; else BR="develop"; fi
-          echo "env=$ENV"   >> $GITHUB_OUTPUT
-          echo "branch=$BR" >> $GITHUB_OUTPUT
+          ENV_IN="${{ github.event.client_payload.env || inputs.env || 'develop' }}"
+          case "$ENV_IN" in
+            prod)
+              ENV_EFF="prod"; BR="main"
+              ;;
+            develop|develop-gke)
+              ENV_EFF="develop-gke"; BR="develop"
+              ;;
+            develop-aws)
+              ENV_EFF="develop-aws"; BR="develop"
+              ;;
+            *)
+              echo "❌ invalid env: $ENV_IN (expected: develop|develop-gke|develop-aws|prod)"; exit 1
+              ;;
+          esac
+          echo "env_in=$ENV_IN"   >> $GITHUB_OUTPUT
+          echo "env=$ENV_EFF"     >> $GITHUB_OUTPUT   # values-${env}.yaml 에 사용
+          echo "branch=$BR"       >> $GITHUB_OUTPUT   # 체크아웃 브랜치
+          echo "Resolved: input=$ENV_IN -> effective=$ENV_EFF, branch=$BR"
 
       - name: Checkout target branch
         uses: actions/checkout@v4
@@ -50,23 +68,16 @@ jobs:
           sudo chmod +x /usr/local/bin/yq
           yq --version
 
-      - name: Map service → file & root (normalize alias)
+      - name: Map service → values file & root key
         id: map
         env:
           IN_SVC: ${{ github.event.client_payload.service || inputs.service }}
-          ENV:    ${{ steps.cfg.outputs.env }}
+          ENV_EFF: ${{ steps.cfg.outputs.env }}
         run: |
           set -euo pipefail
-          svc_in="${IN_SVC:-}"
-          env="${ENV}"
+          svc="${IN_SVC:-}"
+          env="${ENV_EFF}"
 
-          # 1) alias 정규화: fe-user → nginx-client
-          case "$svc_in" in
-            fe-user) svc="nginx-client" ;;
-            *)       svc="$svc_in"      ;;
-          esac
-
-          # 2) 서비스별 values 파일/루트키 매핑
           case "$svc" in
             booking|festival|payment|gateway|user)
               file="values/api/${svc}/values-${env}.yaml"
@@ -81,15 +92,15 @@ jobs:
               root="nginxAdmin"
               ;;
             "")
-              echo "❌ service is empty"; exit 1 ;;
+              echo "❌ service is empty"; exit 1;;
             *)
-              echo "❌ Unknown service: $svc (input: ${svc_in})"; exit 1 ;;
+              echo "❌ Unknown service: $svc"; exit 1;;
           esac
 
           echo "svc_eff=$svc" >> $GITHUB_OUTPUT
           echo "file=$file"   >> $GITHUB_OUTPUT
           echo "root=$root"   >> $GITHUB_OUTPUT
-          echo "Mapped ${svc_in} → ${svc} → $file (root=$root)"
+          echo "Mapped $svc → $file (root=$root)"
 
       - name: Ensure file exists
         run: |
@@ -112,7 +123,6 @@ jobs:
           REPO_ONLY="${IMG##*/}"
           if [ -z "$ROOT" ]; then BPATH='.image'; else BPATH=".[\"${ROOT}\"].image"; fi
 
-          # registry 키 유무에 따라 repository에 짧은/풀 네임 적용
           if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
             yq -i "
               ${BPATH}.repository = \"${REPO_ONLY}\" |
