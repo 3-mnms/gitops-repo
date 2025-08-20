@@ -32,3 +32,4 @@ apiGateway:
     aws:
       scheme: "internal-facing"
       certificateArn: "none"
+      serviceAccountName: aws-load-balancer-controller
