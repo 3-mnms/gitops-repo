@@ -5,7 +5,7 @@ apiGateway:
     tag: v20250820012806
     pullPolicy: IfNotPresent
   spring:
-    profiles: local
+    profiles: develop
   resources:
     requests:
       cpu: "256m"

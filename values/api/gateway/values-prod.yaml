@@ -2,10 +2,10 @@ apiGateway:
   replicaCount: 1
   image:
     repository: rookiesdogun/api-gateway
-    tag: test
+    tag: test2
     pullPolicy: IfNotPresent
   spring:
-    profiles: local
+    profiles: prod
   resources:
     requests:
       cpu: "256m"
@@ -37,4 +37,4 @@ apiGateway:
     aws:
       scheme: "internal-facing" 
       certificateArn: "none"
-      serviceAccountName: aws-load-balancer-controller
+      serviceAccountName:
