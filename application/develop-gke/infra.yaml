@@ -1,28 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: api-payment
+  name: infra
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: payment
+    namespace: infra
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/api/charts/payment
+    path: charts/infra
     helm:
       valueFiles:
-        - $values-repo/values/api/payment/values-develop.yaml
+        - $values-repo/values/infra/values-develop-gke.yaml
         - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/api/charts/payment
+      path: charts/infra
       helm:
         valueFiles:
-          - $values-repo/values/api/payment/values-develop.yaml
+          - $values-repo/values/infra/values-develop-gke.yaml
           - $values-repo/values/values-develop.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop
@@ -32,4 +32,4 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true7

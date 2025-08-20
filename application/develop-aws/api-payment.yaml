@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-payment
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payment
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/api/charts/payment
+    helm:
+      valueFiles:
+        - $values-repo/values/api/payment/values-develop-aws.yaml
+        - $values-repo/values/values-develop.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/api/charts/payment
+      helm:
+        valueFiles:
+          - $values-repo/values/api/payment/values-develop-aws.yaml
+          - $values-repo/values/values-develop.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: develop
+      ref: values-repo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,28 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: api-user
+  name: nginx-admin
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: user
+    namespace: nginx-admin
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/api/charts/user
+    path: charts/nginx-admin
     helm:
       valueFiles:
-        - $values-repo/values/api/user/values-develop.yaml
+        - $values-repo/values/api/nginx-admin/values-develop-gke.yaml
         - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/api/charts/user
+      path: charts/nginx-admin
       helm:
         valueFiles:
-          - $values-repo/values/api/user/values-develop.yaml
+          - $values-repo/values/nginx-admin/values-develop-gke.yaml
           - $values-repo/values/values-develop.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop

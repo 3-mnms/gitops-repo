@@ -1,28 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: api-booking
+  name: nginx-client
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: booking
+    namespace: nginx-client
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/api/charts/booking
+    path: charts/nginx-client
     helm:
       valueFiles:
-        - $values-repo/values/api/booking/values-develop.yaml
+        - $values-repo/values/api/nginx-client/values-develop-aws.yaml
         - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/api/charts/booking
+      path: charts/nginx-client
       helm:
         valueFiles:
-          - $values-repo/values/api/booking/values-develop.yaml
+          - $values-repo/values/nginx-client/values-develop-aws.yaml
           - $values-repo/values/values-develop.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop

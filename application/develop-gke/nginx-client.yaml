@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-client
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-client
+  source:
+    repoURL: https://github.com/3-mnms/devops.git
+    targetRevision: develop
+    path: charts/nginx-client
+    helm:
+      valueFiles:
+        - $values-repo/values/api/nginx-client/values-develop-gke.yaml
+        - $values-repo/values/values-develop.yaml
+  sources: 
+    - repoURL: https://github.com/3-mnms/devops.git
+      targetRevision: develop
+      path: charts/nginx-client
+      helm:
+        valueFiles:
+          - $values-repo/values/nginx-client/values-develop-gke.yaml
+          - $values-repo/values/values-develop.yaml
+    - repoURL: https://github.com/3-mnms/gitops-repo.git 
+      targetRevision: develop
+      ref: values-repo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
