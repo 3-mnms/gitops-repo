@@ -3,7 +3,7 @@ apiUser:
   image:
     registry: rookiesdogun
     repository: api-user
-    tag: v20250820004509
+    tag: v20250820051034
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
