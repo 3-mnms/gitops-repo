@@ -1,37 +1,30 @@
 apiUser:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: api-user
-    tag: v20250820060659
+    tag: v20250821013248
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
   database:
     host: api-user-database-service
     port: 3306
     name: user
     username: rookies
     password: rookies
-
 apiUserDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: user
     username: rookies
     password: rookies
-
   service:
     name: api-user-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi
