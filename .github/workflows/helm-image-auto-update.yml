@@ -82,7 +82,6 @@ jobs:
             esac
           fi
 
-          # 분류
           DEV_TARGETS=()
           PROD_TARGETS=()
           for t in "${TARGETS[@]}"; do
@@ -93,7 +92,6 @@ jobs:
             esac
           done
 
-          # export to outputs (space-joined)
           echo "service=$svc"  >> $GITHUB_OUTPUT
           echo "image=$img"    >> $GITHUB_OUTPUT
           echo "tag=$tag"      >> $GITHUB_OUTPUT
@@ -114,7 +112,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
 
-          # 동시성 대비 rebase+retry
           for i in 1 2 3 4 5; do
             echo "::group::develop sync attempt #$i"
             git fetch origin develop
@@ -122,9 +119,10 @@ jobs:
             git rebase origin/develop || { echo "Rebase failed"; exit 1; }
 
             changed=0
+            declare -A SEEN=()
+
             IFS=',' read -r -a TARGETS <<<"$DEV_TARGETS"
             for env in "${TARGETS[@]}"; do
-              # 맵핑
               svc="${SERVICE}"
               case "$svc" in
                 booking|festival|payment|gateway|user)
@@ -132,7 +130,9 @@ jobs:
                   root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
                   ;;
                 nginx-client)
-                  file="values/nginx-client/values-${env}.yaml"
+                  # 🔧 develop-* 은 'develop' 파일로 매핑
+                  if [ "$env" = "prod" ]; then env_file="prod"; else env_file="develop"; fi
+                  file="values/nginx-client/values-${env_file}.yaml"
                   root="nginxClient"
                   ;;
                 fe-admin)
@@ -143,6 +143,13 @@ jobs:
               esac
 
               [ -f "$file" ] || { echo "❌ Not found: $file"; exit 1; }
+
+              # 같은 파일 중복 패치 방지 (예: gke+aws → develop 하나의 파일)
+              if [ -n "${SEEN[$file]+x}" ]; then
+                echo "↩️  skip duplicate file $file (already patched)"
+                continue
+              fi
+              SEEN[$file]=1
 
               repo_only="${IMAGE##*/}"
               if [ -z "$root" ]; then bpath='.image'; else bpath=".[\"${root}\"].image"; fi
@@ -158,7 +165,7 @@ jobs:
                   ${bpath}.tag        = \"${TAG}\"
                 " "$file"
               fi
-              echo "✅ [$env] $(yq -r "${bpath}" "$file")"
+              echo "✅ [$env] -> $file : $(yq -r "${bpath}" "$file")"
               git add "$file"
               changed=1
             done
@@ -204,7 +211,7 @@ jobs:
                   root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
                   ;;
                 nginx-client)
-                  file="values/nginx-client/values-${env}.yaml"
+                  file="values/nginx-client/values-prod.yaml"
                   root="nginxClient"
                   ;;
                 fe-admin)
@@ -230,7 +237,7 @@ jobs:
                   ${bpath}.tag        = \"${TAG}\"
                 " "$file"
               fi
-              echo "✅ [prod] $(yq -r "${bpath}" "$file")"
+              echo "✅ [prod] -> $file : $(yq -r "${bpath}" "$file")"
               git add "$file"
               changed=1
             done
