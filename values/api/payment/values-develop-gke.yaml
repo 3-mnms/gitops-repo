@@ -1,4 +1,6 @@
 apiPayment:
+  spring:
+    profiles: prod
   replicaCount: 1
   image:
     registry: rookiesdogun
