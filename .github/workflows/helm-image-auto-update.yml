@@ -122,7 +122,7 @@ jobs:
           if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
             yq -i "
               ${BPATH}.repository = \"${REPO_ONLY}\" |
-              ${BATH}.tag        = \"${TAG}\"
+              ${BPATH}.tag        = \"${TAG}\"
             " "$FILE"
           else
             yq -i "
