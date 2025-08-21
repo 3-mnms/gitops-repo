@@ -2,7 +2,7 @@ name: "🔄 Helm 이미지 태그 자동 반영"
 run-name: >
   🔄 ${{ github.event.client_payload.service || inputs.service }}
   – ${{ github.event.client_payload.tag || inputs.tag }}
-  (env: ${{ github.event.client_payload.env || inputs.env || 'develop-gke' }})
+  (targets: ${{ github.event.client_payload.targets || inputs.targets || github.event.client_payload.env || inputs.env || 'develop-gke' }})
 
 on:
   repository_dispatch:
@@ -20,122 +20,229 @@ on:
         description: "ex) v20250812010101"
       env:
         required: false
-        description: "develop-gke|develop-aws|prod"
-        default: "develop-gke"
+        description: "develop-gke|develop-aws|prod (단일)"
+      targets:
+        required: false
+        description: "CSV: develop-gke,develop-aws 또는 prod"
 
 permissions:
   contents: write
 
 concurrency:
-  group: "patch-${{ github.event.client_payload.service || inputs.service }}-${{ github.event.client_payload.env || inputs.env || 'develop-gke' }}"
+  group: "patch-${{ github.event.client_payload.service || inputs.service }}-${{ github.event.client_payload.targets || inputs.targets || github.event.client_payload.env || inputs.env || 'develop-gke' }}"
   cancel-in-progress: true
 
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve env → file suffix & target branch
-        id: cfg
-        run: |
-          ENV_IN="${{ github.event.client_payload.env || inputs.env || 'develop-gke' }}"
-          case "$ENV_IN" in
-            prod)
-              ENV_EFF="prod"; BR="main" ;;
-            develop-gke)
-              ENV_EFF="develop-gke"; BR="develop" ;;
-            develop-aws)
-              ENV_EFF="develop-aws"; BR="develop" ;;
-            *)
-              echo "❌ invalid env: $ENV_IN (expected: develop-gke|develop-aws|prod)"; exit 1 ;;
-          esac
-          echo "env_in=$ENV_IN"   >> $GITHUB_OUTPUT
-          echo "env=$ENV_EFF"     >> $GITHUB_OUTPUT
-          echo "branch=$BR"       >> $GITHUB_OUTPUT
-          echo "Resolved: input=$ENV_IN -> effective=$ENV_EFF, branch=$BR"
-
-      - name: Checkout target branch
+      - name: Checkout (shallow)
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.cfg.outputs.branch }}
+          fetch-depth: 0
 
-      - name: Install yq
+      - name: Install tools (yq, jq)
         run: |
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
-          yq --version
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+          yq --version; jq --version
 
-      - name: Map service → values file & root key
-        id: map
+      - name: Resolve inputs → TARGETS
+        id: cfg
         env:
-          IN_SVC:  ${{ github.event.client_payload.service || inputs.service }}
-          ENV_EFF: ${{ steps.cfg.outputs.env }}
+          IN_SVC:   ${{ github.event.client_payload.service || inputs.service }}
+          IN_IMG:   ${{ github.event.client_payload.image   || inputs.image }}
+          IN_TAG:   ${{ github.event.client_payload.tag     || inputs.tag }}
+          IN_ENV:   ${{ github.event.client_payload.env     || inputs.env }}
+          IN_TGTS:  ${{ github.event.client_payload.targets || inputs.targets }}
         run: |
           set -euo pipefail
+
           svc="${IN_SVC:-}"
-          env="${ENV_EFF}"
+          img="${IN_IMG:-}"
+          tag="${IN_TAG:-}"
+          env_in="${IN_ENV:-}"
+          tgts_csv="${IN_TGTS:-}"
 
-          case "$svc" in
-            booking|festival|payment|gateway|user)
-              file="values/api/${svc}/values-${env}.yaml"
-              root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
-              ;;
-            nginx-client)
-              file="values/nginx-client/values-${env}.yaml"
-              root="nginxClient"
-              ;;
-            fe-admin)
-              file="values/nginx-admin/values-${env}.yaml"
-              root="nginxAdmin"
-              ;;
-            "")
-              echo "❌ service is empty"; exit 1 ;;
-            *)
-              echo "❌ Unknown service: $svc"; exit 1 ;;
-          esac
+          [ -n "$svc" ] || { echo "❌ service empty"; exit 1; }
+          [ -n "$img" ] || { echo "❌ image empty"; exit 1; }
+          [ -n "$tag" ] || { echo "❌ tag empty"; exit 1; }
 
-          echo "svc_eff=$svc" >> $GITHUB_OUTPUT
-          echo "file=$file"   >> $GITHUB_OUTPUT
-          echo "root=$root"   >> $GITHUB_OUTPUT
-          echo "Mapped $svc → $file (root=$root)"
-
-      - name: Ensure file exists
-        run: |
-          if [ ! -f "${{ steps.map.outputs.file }}" ]; then
-            echo "❌ Not found: ${{ steps.map.outputs.file }}"
-            exit 1
+          # targets 우선, 없으면 env 사용, env=develop 이면 develop-gke,develop-aws 동시 처리
+          if [ -n "$tgts_csv" ]; then
+            IFS=',' read -r -a TARGETS <<<"$(echo "$tgts_csv" | tr -d ' ')"
+          else
+            case "${env_in:-}" in
+              develop) TARGETS=("develop-gke" "develop-aws") ;;
+              develop-gke|develop-aws|prod) TARGETS=("$env_in") ;;
+              "" ) TARGETS=("develop-gke") ;;
+              * ) echo "❌ invalid env: $env_in"; exit 1 ;;
+            esac
           fi
 
-      - name: Patch values (repository/tag)
+          # 분류
+          DEV_TARGETS=()
+          PROD_TARGETS=()
+          for t in "${TARGETS[@]}"; do
+            case "$t" in
+              develop-gke|develop-aws) DEV_TARGETS+=("$t") ;;
+              prod) PROD_TARGETS+=("$t") ;;
+              *) echo "❌ invalid target: $t"; exit 1 ;;
+            esac
+          done
+
+          # export to outputs (space-joined)
+          echo "service=$svc"  >> $GITHUB_OUTPUT
+          echo "image=$img"    >> $GITHUB_OUTPUT
+          echo "tag=$tag"      >> $GITHUB_OUTPUT
+          printf "%s" "${DEV_TARGETS[*]-}"  | sed 's/ /,/g' | awk '{print "dev_targets="$0}'   >> $GITHUB_OUTPUT
+          printf "%s" "${PROD_TARGETS[*]-}" | sed 's/ /,/g' | awk '{print "prod_targets="$0}'  >> $GITHUB_OUTPUT
+
+          echo "Resolved targets: DEV=[${DEV_TARGETS[*]-}] PROD=[${PROD_TARGETS[*]-}]"
+
+      - name: Patch develop branch targets (multi-file, single commit)
+        if: ${{ steps.cfg.outputs.dev_targets != '' }}
         env:
-          IMG:  ${{ github.event.client_payload.image || inputs.image }}
-          TAG:  ${{ github.event.client_payload.tag || inputs.tag }}
-          FILE: ${{ steps.map.outputs.file }}
-          ROOT: ${{ steps.map.outputs.root }}
+          SERVICE:      ${{ steps.cfg.outputs.service }}
+          IMAGE:        ${{ steps.cfg.outputs.image }}
+          TAG:          ${{ steps.cfg.outputs.tag }}
+          DEV_TARGETS:  ${{ steps.cfg.outputs.dev_targets }}
         run: |
           set -euo pipefail
-          [ -n "$IMG" ] || { echo "❌ image is empty"; exit 1; }
-          [ -n "$TAG" ] || { echo "❌ tag is empty"; exit 1; }
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
 
-          REPO_ONLY="${IMG##*/}"
-          if [ -z "$ROOT" ]; then BPATH='.image'; else BPATH=".[\"${ROOT}\"].image"; fi
+          # 동시성 대비 rebase+retry
+          for i in 1 2 3 4 5; do
+            echo "::group::develop sync attempt #$i"
+            git fetch origin develop
+            git checkout develop
+            git rebase origin/develop || { echo "Rebase failed"; exit 1; }
 
-          if yq -e "${BPATH} | has(\"registry\")" "$FILE" >/dev/null 2>&1; then
-            yq -i "
-              ${BPATH}.repository = \"${REPO_ONLY}\" |
-              ${BPATH}.tag        = \"${TAG}\"
-            " "$FILE"
-          else
-            yq -i "
-              ${BPATH}.repository = \"${IMG}\" |
-              ${BPATH}.tag        = \"${TAG}\"
-            " "$FILE"
-          fi
+            changed=0
+            IFS=',' read -r -a TARGETS <<<"$DEV_TARGETS"
+            for env in "${TARGETS[@]}"; do
+              # 맵핑
+              svc="${SERVICE}"
+              case "$svc" in
+                booking|festival|payment|gateway|user)
+                  file="values/api/${svc}/values-${env}.yaml"
+                  root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
+                  ;;
+                nginx-client)
+                  file="values/nginx-client/values-${env}.yaml"
+                  root="nginxClient"
+                  ;;
+                fe-admin)
+                  file="values/nginx-admin/values-${env}.yaml"
+                  root="nginxAdmin"
+                  ;;
+                *) echo "❌ Unknown service: $svc"; exit 1 ;;
+              esac
 
-          echo "✅ Patched:" && yq -r "${BPATH}" "$FILE"
+              [ -f "$file" ] || { echo "❌ Not found: $file"; exit 1; }
 
-      - name: Commit & push
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          branch: ${{ steps.cfg.outputs.branch }}
-          commit_message: "chore(values): ${{ steps.map.outputs.svc_eff }} tag → ${{ github.event.client_payload.tag || inputs.tag }} [env:${{ steps.cfg.outputs.env }}]"
-          file_pattern: ${{ steps.map.outputs.file }}
+              repo_only="${IMAGE##*/}"
+              if [ -z "$root" ]; then bpath='.image'; else bpath=".[\"${root}\"].image"; fi
+
+              if yq -e "${bpath} | has(\"registry\")" "$file" >/dev/null 2>&1; then
+                yq -i "
+                  ${bpath}.repository = \"${repo_only}\" |
+                  ${bpath}.tag        = \"${TAG}\"
+                " "$file"
+              else
+                yq -i "
+                  ${bpath}.repository = \"${IMAGE}\" |
+                  ${bpath}.tag        = \"${TAG}\"
+                " "$file"
+              fi
+              echo "✅ [$env] $(yq -r "${bpath}" "$file")"
+              git add "$file"
+              changed=1
+            done
+
+            if [ "$changed" -eq 1 ]; then
+              git commit -m "chore(values): ${SERVICE} tag → ${TAG} [envs:${DEV_TARGETS}] (develop)"
+              if git push origin HEAD:develop; then
+                echo "::endgroup::"; break
+              fi
+              echo "::endgroup:: push failed; retry..."
+              sleep $((RANDOM % 5 + 2))
+            else
+              echo "::endgroup:: No changes"; break
+            fi
+          done
+
+      - name: Patch main branch target (prod)
+        if: ${{ steps.cfg.outputs.prod_targets != '' }}
+        env:
+          SERVICE:      ${{ steps.cfg.outputs.service }}
+          IMAGE:        ${{ steps.cfg.outputs.image }}
+          TAG:          ${{ steps.cfg.outputs.tag }}
+          PROD_TARGETS: ${{ steps.cfg.outputs.prod_targets }}
+        run: |
+          set -euo pipefail
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+          for i in 1 2 3 4 5; do
+            echo "::group::main sync attempt #$i"
+            git fetch origin main
+            git checkout main
+            git rebase origin/main || { echo "Rebase failed"; exit 1; }
+
+            changed=0
+            IFS=',' read -r -a TARGETS <<<"$PROD_TARGETS"
+            for env in "${TARGETS[@]}"; do
+              [ "$env" = "prod" ] || { echo "skip unknown prod target: $env"; continue; }
+              svc="${SERVICE}"
+              case "$svc" in
+                booking|festival|payment|gateway|user)
+                  file="values/api/${svc}/values-${env}.yaml"
+                  root="api$(echo "$svc" | sed 's/^\(.\)/\U\1/')"
+                  ;;
+                nginx-client)
+                  file="values/nginx-client/values-${env}.yaml"
+                  root="nginxClient"
+                  ;;
+                fe-admin)
+                  file="values/nginx-admin/values-${env}.yaml"
+                  root="nginxAdmin"
+                  ;;
+                *) echo "❌ Unknown service: $svc"; exit 1 ;;
+              esac
+
+              [ -f "$file" ] || { echo "❌ Not found: $file"; exit 1; }
+
+              repo_only="${IMAGE##*/}"
+              if [ -z "$root" ]; then bpath='.image'; else bpath=".[\"${root}\"].image"; fi
+
+              if yq -e "${bpath} | has(\"registry\")" "$file" >/dev/null 2>&1; then
+                yq -i "
+                  ${bpath}.repository = \"${repo_only}\" |
+                  ${bpath}.tag        = \"${TAG}\"
+                " "$file"
+              else
+                yq -i "
+                  ${bpath}.repository = \"${IMAGE}\" |
+                  ${bpath}.tag        = \"${TAG}\"
+                " "$file"
+              fi
+              echo "✅ [prod] $(yq -r "${bpath}" "$file")"
+              git add "$file"
+              changed=1
+            done
+
+            if [ "$changed" -eq 1 ]; then
+              git commit -m "chore(values): ${SERVICE} tag → ${TAG} [envs:${PROD_TARGETS}] (main)"
+              if git push origin HEAD:main; then
+                echo "::endgroup::"; break
+              fi
+              echo "::endgroup:: push failed; retry..."
+              sleep $((RANDOM % 5 + 2))
+            else
+              echo "::endgroup:: No changes"; break
+            fi
+          done
