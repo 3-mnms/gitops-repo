@@ -6,7 +6,7 @@ apiBooking:
   image:
     registry: rookiesdogun
     repository: api-booking
-    tag: v20250821011803
+    tag: v20250821070632
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
