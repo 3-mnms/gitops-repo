@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250811013546
+    tag: v20250821012832
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -14,22 +14,17 @@ apiFestival:
     name: festival
     username: rookies
     password: rookies
-
-
 apiFestivalDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: festival
     username: rookies
     password: rookies
-
   service:
     name: api-festival-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi
