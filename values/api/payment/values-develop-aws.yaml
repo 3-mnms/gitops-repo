@@ -3,7 +3,7 @@ apiPayment:
   image:
     registry: rookiesdogun
     repository: api-payment
-    tag: v20250811011601
+    tag: v20250821013120
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -14,22 +14,17 @@ apiPayment:
     name: payment
     username: rookies
     password: rookies
-
-
 apiPaymentDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: payment
     username: rookies
     password: rookies
-
   service:
     name: api-payment-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi
