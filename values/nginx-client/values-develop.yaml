@@ -18,7 +18,7 @@ nginxClient:
       https: 443
     path: /
     pathType: Prefix
-    tls: false
+    tls: true
 
     gce:
       ipName: rookies-tekcit-static-ip
