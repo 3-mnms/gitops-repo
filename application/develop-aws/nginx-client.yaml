@@ -14,7 +14,7 @@ spec:
     path: charts/nginx-client
     helm:
       valueFiles:
-        - $values-repo/values/api/nginx-client/values-develop-aws.yaml
+        - $values-repo/values/api/nginx-client/values-develop.yaml
         - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
@@ -22,8 +22,11 @@ spec:
       path: charts/nginx-client
       helm:
         valueFiles:
-          - $values-repo/values/nginx-client/values-develop-aws.yaml
+          - $values-repo/values/nginx-client/values-develop.yaml
           - $values-repo/values/values-develop.yaml
+        valuesFrom:
+          - secretRef:
+              name: nginx-client-values-secret
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop
       ref: values-repo
