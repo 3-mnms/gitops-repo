@@ -16,7 +16,7 @@ global:
     apiPaymentDatabase: api-payment-database-service
 
     client: nginx-client-service
-    admin: nginx-admin-service
+    mobile: nginx-mobile-service
   apiGateway:
     serviceLabel: expose-via-spring-gateway
 

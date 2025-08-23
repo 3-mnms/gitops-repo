@@ -3,14 +3,11 @@ nginxClient:
   image:
     registry: rookiesdogun
     repository: nginx-client
-    tag: v20250821052422
+    tag: v20250822093513-win
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 80
-
-
-
   ingress:
     mode: aws
     port:
@@ -18,13 +15,12 @@ nginxClient:
       https: 443
     path: /
     pathType: Prefix
-    tls: true
-
+    tls: false
     gce:
       ipName: rookies-tekcit-static-ip
       backendConfigName: api-gateway-backendconfig
       tlsSecret: nginx-client-tls-secret
     aws:
-      scheme: "internet-facing" 
+      scheme: "internet-facing"
       certificateArn: "none"
       serviceAccountName: aws-load-balancer-controller
