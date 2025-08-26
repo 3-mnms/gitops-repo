@@ -16,6 +16,13 @@ apiPayment:
     name: payment
     username: rookies
     password: rookies
+  resources:
+    requests:
+      cpu: "256m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
 apiPaymentDatabase:
   replicaCount: 1
   auth:

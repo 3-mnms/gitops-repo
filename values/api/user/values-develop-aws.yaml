@@ -14,6 +14,13 @@ apiUser:
     name: user
     username: rookies
     password: rookies
+  resources:
+    requests:
+      cpu: "256m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
 apiUserDatabase:
   replicaCount: 1
   auth:
