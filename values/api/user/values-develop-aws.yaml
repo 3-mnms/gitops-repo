@@ -21,6 +21,10 @@ apiUser:
     limits:
       cpu: "500m"
       memory: "1024Mi"
+  kakao:
+    redirectUri: /api/auth/kakao/callback
+  login:
+    uri: /auth/signup/kakao
 apiUserDatabase:
   replicaCount: 1
   auth:
