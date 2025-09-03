@@ -16,6 +16,7 @@ spec:
       valueFiles:
         - $values-repo/values/api/nginx-client/values-develop.yaml
         - $values-repo/values/values-develop.yaml
+        - $values-repo-secret/tls/values-tls-aws.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
@@ -24,9 +25,14 @@ spec:
         valueFiles:
           - $values-repo/values/nginx-client/values-develop.yaml
           - $values-repo/values/values-develop.yaml
+          - $values-repo-secret/tls/values-tls-aws.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop
       ref: values-repo
+    - repoURL: https://github.com/3-mnms/gitops-repo-secret.git 
+      targetRevision: develop
+      ref: values-repo-secret
+
   syncPolicy:
     automated:
       prune: true
