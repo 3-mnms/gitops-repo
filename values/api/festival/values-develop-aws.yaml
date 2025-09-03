@@ -46,7 +46,7 @@ apiFestivalAi:
     
     # 후에 api-festival-ai 로 변경 필요
     repository: tekcit-ai
-    tag: test
+    tag: v0.1
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
