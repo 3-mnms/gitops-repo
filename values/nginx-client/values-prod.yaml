@@ -28,5 +28,4 @@ nginxClient:
       tlsSecret: nginx-client-tls-secret
     aws:
       scheme: "internet-facing" 
-      certificateArn: "none"
       serviceAccountName: aws-load-balancer-controller

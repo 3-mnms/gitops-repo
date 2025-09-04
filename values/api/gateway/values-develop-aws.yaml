@@ -32,5 +32,4 @@ apiGateway:
       tlsSecret: api-gateway-tls-secret
     aws:
       scheme: "internet-facing"
-      certificateArn: "none"
       serviceAccountName:
