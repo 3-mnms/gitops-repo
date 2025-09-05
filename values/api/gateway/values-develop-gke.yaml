@@ -2,7 +2,7 @@ apiGateway:
   replicaCount: 1
   image:
     repository: rookiesdogun/api-gateway
-    tag: v20250905005615
+    tag: v20250905013309
     pullPolicy: IfNotPresent
   spring:
     profiles: develop
