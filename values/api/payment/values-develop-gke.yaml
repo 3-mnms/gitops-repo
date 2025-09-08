@@ -5,7 +5,7 @@ apiPayment:
   image:
     registry: rookiesdogun
     repository: api-payment
-    tag: v20250905080145
+    tag: v20250908062745
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
