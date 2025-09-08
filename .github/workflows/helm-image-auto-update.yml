@@ -11,7 +11,7 @@ on:
     inputs:
       service:
         required: false
-        description: "booking|festival|payment|gateway|user|nginx-client|fe-admin"
+        description: "booking|festival|payment|gateway|user|nginx-client|nginx-mobile"
       image:
         required: false
         description: "ex) rookiesdogun/api-booking"
@@ -135,7 +135,7 @@ jobs:
                   file="values/nginx-client/values-${env_file}.yaml"
                   root="nginxClient"
                   ;;
-                fe-admin)
+                nginx-mobile)
                   file="values/nginx-admin/values-${env}.yaml"
                   root="nginxAdmin"
                   ;;
@@ -214,7 +214,7 @@ jobs:
                   file="values/nginx-client/values-prod.yaml"
                   root="nginxClient"
                   ;;
-                fe-admin)
+                nginx-mobile)
                   file="values/nginx-admin/values-${env}.yaml"
                   root="nginxAdmin"
                   ;;
