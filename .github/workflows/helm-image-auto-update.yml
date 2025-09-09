@@ -138,6 +138,7 @@ jobs:
                   root="nginxClient"
                   ;;
                 nginx-mobile)
+                  if [ "$env" = "prod" ]; then env_file="prod"; else env_file="develop"; fi
                   file="values/nginx-client/values-${env_file}.yaml"
                   root="nginxClientMobile"
                   ;;
