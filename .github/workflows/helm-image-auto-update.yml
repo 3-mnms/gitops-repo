@@ -65,7 +65,9 @@ jobs:
           tag="${IN_TAG:-}"
           env_in="${IN_ENV:-}"
           tgts_csv="${IN_TGTS:-}"
-
+          
+          echo "Inputs: svc=$svc img=$img tag=$tag env=$env_in tgts=$tgts_csv"
+          
           [ -n "$svc" ] || { echo "❌ service empty"; exit 1; }
           [ -n "$img" ] || { echo "❌ image empty"; exit 1; }
           [ -n "$tag" ] || { echo "❌ tag empty"; exit 1; }
