@@ -23,19 +23,14 @@ nginxClient:
     aws:
       scheme: "internet-facing"
       serviceAccountName: aws-load-balancer-controller
-
-
 # 모바일 설정 추가
 nginxClientMobile:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: nginx-mobile
-    tag: v20250908142844
+    tag: v20250909030532
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 80
-    
