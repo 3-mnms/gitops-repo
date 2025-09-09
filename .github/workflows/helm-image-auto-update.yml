@@ -138,7 +138,7 @@ jobs:
                   root="nginxClient"
                   ;;
                 nginx-mobile)
-                  file="values/nginx-client/values-${env}.yaml"
+                  file="values/nginx-client/values-${env_file}.yaml"
                   root="nginxClientMobile"
                   ;;
                 *) echo "❌ Unknown service: $svc"; exit 1 ;;
@@ -217,7 +217,7 @@ jobs:
                   root="nginxClient"
                   ;;
                 nginx-mobile)
-                  file="values/nginx-client/values-${env}.yaml"
+                  file="values/nginx-client/values-prod.yaml"
                   root="nginxClientMobile"
                   ;;
                 *) echo "❌ Unknown service: $svc"; exit 1 ;;
