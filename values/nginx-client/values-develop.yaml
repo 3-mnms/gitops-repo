@@ -31,8 +31,8 @@ nginxClientMobile:
 
   image:
     registry: rookiesdogun
-    repository: nginx-mobile
-    tag: latest
+    repository: nginx-client
+    tag: v20250906050936
     pullPolicy: IfNotPresent
 
   service:
