@@ -4,23 +4,34 @@ argo-cd:
 
 global:
   service:
+    # Kafka
     kafka:  kafka-service
     kafkaUi:  kafka-ui-service
+    
+    # API Gateway
     apiGateway: api-gateway-service
+
+    # Booking
     apiBooking: api-booking-service
     apiBookingDatabase: api-booking-database-service
     apiBookingRedis: api-booking-redis-service
+
+    # Festival
     apiFestival: api-festival-service
     apiFestivalDatabase: api-festival-database-service
+    apiFestivalAi: api-festival-ai-service
+
+    # Payment
     apiPayment: api-payment-service
     apiPaymentDatabase: api-payment-database-service
 
+    # Frontend
     client: nginx-client-service
-    admin: nginx-admin-service
+    mobile: nginx-mobile-service
+
   apiGateway:
     serviceLabel: expose-via-spring-gateway
 
-  
   namespace:
     infra: infra
     

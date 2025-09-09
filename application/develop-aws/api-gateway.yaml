@@ -1,32 +1,40 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-client
+  name: api-gateway
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: nginx-client
+    namespace: gateway
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/nginx-client
+    path: charts/api/charts/gateway
     helm:
       valueFiles:
-        - $values-repo/values/api/nginx-client/values-develop.yaml
+        - $values-repo/values/api/gateway/values-develop-aws.yaml
         - $values-repo/values/values-develop.yaml
+        - $values-repo-secret/tls/values-tls-aws.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/nginx-client
+      path: charts/api/charts/gateway
       helm:
         valueFiles:
-          - $values-repo/values/nginx-client/values-develop.yaml
+          - $values-repo/values/api/gateway/values-develop-aws.yaml
           - $values-repo/values/values-develop.yaml
+          - $values-repo-secret/tls/values-tls-aws.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop
       ref: values-repo
+    - repoURL: https://github.com/3-mnms/gitops-repo-secret.git 
+      targetRevision: develop
+      ref: values-repo-secret
+
+
+
   syncPolicy:
     automated:
       prune: true

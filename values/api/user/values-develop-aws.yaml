@@ -1,37 +1,41 @@
 apiUser:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: api-user
-    tag: v20250828071909
+    tag: v20250907013749
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
   database:
     host: api-user-database-service
     port: 3306
     name: user
     username: rookies
     password: rookies
-
+  resources:
+    requests:
+      cpu: "256m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
+  kakao:
+    redirectUri: /api/auth/kakao/callback
+  login:
+    uri: /auth/signup/kakao
 apiUserDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: user
     username: rookies
     password: rookies
-
   service:
     name: api-user-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi

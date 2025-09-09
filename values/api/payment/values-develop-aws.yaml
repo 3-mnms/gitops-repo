@@ -1,37 +1,39 @@
-apiUser:
+apiPayment:
+  spring:
+    profiles: prod
   replicaCount: 1
-
   image:
     registry: rookiesdogun
-    repository: api-user
-    tag: v20250828071909
+    repository: api-payment
+    tag: v20250909010337
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
   database:
-    host: api-user-database-service
+    host: api-payment-database-service
     port: 3306
-    name: user
+    name: payment
     username: rookies
     password: rookies
-
-apiUserDatabase:
+  resources:
+    requests:
+      cpu: "256m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
+apiPaymentDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
-    database: user
+    database: payment
     username: rookies
     password: rookies
-
   service:
-    name: api-user-database-service
+    name: api-payment-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi

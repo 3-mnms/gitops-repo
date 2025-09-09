@@ -1,32 +1,38 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kafka
+  name: nginx-client
   namespace: argocd
 spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: kafka
+    namespace: nginx-client
   source:
     repoURL: https://github.com/3-mnms/devops.git
     targetRevision: develop
-    path: charts/kafka
+    path: charts/nginx-client
     helm:
       valueFiles:
-        - $values-repo/values/kafka/values-develop.yaml
+        - $values-repo/values/api/nginx-client/values-develop.yaml
         - $values-repo/values/values-develop.yaml
+        - $values-repo-secret/tls/values-tls-aws.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
       targetRevision: develop
-      path: charts/kafka
+      path: charts/nginx-client
       helm:
         valueFiles:
-          - $values-repo/values/kafka/values-develop.yaml
+          - $values-repo/values/nginx-client/values-develop.yaml
           - $values-repo/values/values-develop.yaml
+          - $values-repo-secret/tls/values-tls-aws.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop
       ref: values-repo
+    - repoURL: https://github.com/3-mnms/gitops-repo-secret.git 
+      targetRevision: develop
+      ref: values-repo-secret
+
   syncPolicy:
     automated:
       prune: true

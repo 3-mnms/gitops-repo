@@ -14,7 +14,7 @@ spec:
     path: charts/api/charts/festival
     helm:
       valueFiles:
-        - $values-repo/values/api/festival/values-develop.yaml
+        - $values-repo/values/api/festival/values-develop-aws.yaml
         - $values-repo/values/values-develop.yaml
   sources: 
     - repoURL: https://github.com/3-mnms/devops.git
@@ -22,7 +22,7 @@ spec:
       path: charts/api/charts/festival
       helm:
         valueFiles:
-          - $values-repo/values/api/festival/values-develop.yaml
+          - $values-repo/values/api/festival/values-develop-aws.yaml
           - $values-repo/values/values-develop.yaml
     - repoURL: https://github.com/3-mnms/gitops-repo.git 
       targetRevision: develop

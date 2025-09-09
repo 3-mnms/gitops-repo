@@ -2,10 +2,10 @@ apiGateway:
   replicaCount: 1
   image:
     repository: rookiesdogun/api-gateway
-    tag: test2
+    tag: v20250905015315
     pullPolicy: IfNotPresent
   spring:
-    profiles: prod
+    profiles: develop
   resources:
     requests:
       cpu: "256m"
@@ -13,27 +13,22 @@ apiGateway:
     limits:
       cpu: "500m"
       memory: "1024Mi"
-
-
   service:
     type: ClusterIP
     port: 80
     targetPort: 8080
-
-
   ingress:
-    mode: aws
+    mode: gce
     port:
       http: 80
       https: 443
     path: /
     pathType: Prefix
     tls: false
-
     gce:
       ipName: rookies-tekcit-static-ip
       backendConfigName: api-gateway-backendconfig
       tlsSecret: api-gateway-tls-secret
     aws:
-      scheme: "internet-facing" 
-      serviceAccountName:
+      scheme: "internet-facing"
+      serviceAccountName: aws-load-balancer-controller
