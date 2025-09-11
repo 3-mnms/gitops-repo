@@ -11,7 +11,7 @@ on:
     inputs:
       service:
         required: false
-        description: "booking|festival|payment|gateway|user|nginx-client|fe-admin"
+        description: "booking|festival|payment|gateway|user|nginx-client|nginx-mobile"
       image:
         required: false
         description: "ex) rookiesdogun/api-booking"
@@ -65,7 +65,9 @@ jobs:
           tag="${IN_TAG:-}"
           env_in="${IN_ENV:-}"
           tgts_csv="${IN_TGTS:-}"
-
+          
+          echo "Inputs: svc=$svc img=$img tag=$tag env=$env_in tgts=$tgts_csv"
+          
           [ -n "$svc" ] || { echo "❌ service empty"; exit 1; }
           [ -n "$img" ] || { echo "❌ image empty"; exit 1; }
           [ -n "$tag" ] || { echo "❌ tag empty"; exit 1; }
@@ -135,9 +137,10 @@ jobs:
                   file="values/nginx-client/values-${env_file}.yaml"
                   root="nginxClient"
                   ;;
-                fe-admin)
-                  file="values/nginx-admin/values-${env}.yaml"
-                  root="nginxAdmin"
+                nginx-mobile)
+                  if [ "$env" = "prod" ]; then env_file="prod"; else env_file="develop"; fi
+                  file="values/nginx-client/values-${env_file}.yaml"
+                  root="nginxClientMobile"
                   ;;
                 *) echo "❌ Unknown service: $svc"; exit 1 ;;
               esac
@@ -214,9 +217,9 @@ jobs:
                   file="values/nginx-client/values-prod.yaml"
                   root="nginxClient"
                   ;;
-                fe-admin)
-                  file="values/nginx-admin/values-${env}.yaml"
-                  root="nginxAdmin"
+                nginx-mobile)
+                  file="values/nginx-client/values-prod.yaml"
+                  root="nginxClientMobile"
                   ;;
                 *) echo "❌ Unknown service: $svc"; exit 1 ;;
               esac
