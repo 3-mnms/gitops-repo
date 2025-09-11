@@ -42,7 +42,7 @@ apiFestivalAi:
     registry: rookiesdogun
     # 후에 api-festival-ai 로 변경 필요
     repository: api-festival-ai
-    tag: v0.1
+    tag: v20250911055756
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
