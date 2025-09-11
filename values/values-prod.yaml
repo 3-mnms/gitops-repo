@@ -25,6 +25,11 @@ global:
     apiPayment: api-payment-service
     apiPaymentDatabase: api-payment-database-service
 
+    # User
+    apiUser: api-user-service
+    apiUserDatabase: api-user-database-service
+    apiUserRedis: api-user-redis-service
+    
     # Frontend
     client: nginx-client-service
     mobile: nginx-mobile-service
