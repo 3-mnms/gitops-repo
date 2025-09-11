@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250910050849
+    tag: v20250911003500
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
