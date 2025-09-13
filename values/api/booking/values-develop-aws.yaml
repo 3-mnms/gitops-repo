@@ -51,3 +51,7 @@ apiBookingRedis:
     enabled: true
     size: 7Gi
     storageClass: "gp2"
+
+
+nodeExporter: 
+  enabled: true
