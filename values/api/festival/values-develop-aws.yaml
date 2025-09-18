@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250915172317
+    tag: v20250917063903
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -42,7 +42,7 @@ apiFestivalAi:
     registry: rookiesdogun
     # 후에 api-festival-ai 로 변경 필요
     repository: api-festival-ai
-    tag: v20250913042924
+    tag: v20250918012447
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
