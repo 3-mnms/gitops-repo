@@ -29,7 +29,7 @@ nginxClientMobile:
   image:
     registry: rookiesdogun
     repository: nginx-mobile
-    tag: v20250918073022
+    tag: v20250918155323
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
