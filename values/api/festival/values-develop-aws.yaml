@@ -16,11 +16,11 @@ apiFestival:
     password: rookies
   resources:
     requests:
+      cpu: "128m"
+      memory: "256Mi"
+    limits:
       cpu: "256m"
       memory: "512Mi"
-    limits:
-      cpu: "500m"
-      memory: "1024Mi"
 apiFestivalDatabase:
   replicaCount: 1
   auth:
