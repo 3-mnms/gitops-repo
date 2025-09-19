@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250919005348
+    tag: v20250917063903
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -16,11 +16,11 @@ apiFestival:
     password: rookies
   resources:
     requests:
-      cpu: "128m"
-      memory: "256Mi"
+      cpu: "300m"
+      memory: "512Mi"
     limits:
-      cpu: "200m"
-      memory: "384Mi"
+      cpu: "400m"
+      memory: "600Mi"
 apiFestivalDatabase:
   replicaCount: 1
   auth:
