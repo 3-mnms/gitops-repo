@@ -19,8 +19,8 @@ apiFestival:
       cpu: "128m"
       memory: "256Mi"
     limits:
-      cpu: "256m"
-      memory: "512Mi"
+      cpu: "200m"
+      memory: "384Mi"
 apiFestivalDatabase:
   replicaCount: 1
   auth:
