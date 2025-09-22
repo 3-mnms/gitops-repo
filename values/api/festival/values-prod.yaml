@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250811013546
+    tag: v20250922060646
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -14,32 +14,25 @@ apiFestival:
     name: festival
     username: rookies
     password: rookies
-
-
 apiFestivalDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: festival
     username: rookies
     password: rookies
-
   service:
     name: api-festival-database-service
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi
     storageClass: "gp2"
-
-
 apiFestivalAi:
   replicaCount: 1
   image:
-    registry: rookiesdogun    
+    registry: rookiesdogun
     # 후에 api-festival-ai 로 변경 필요
     repository: tekcit-ai
     tag: test
