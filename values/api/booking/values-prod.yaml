@@ -3,53 +3,43 @@
 #
 apiBooking:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: api-booking
-    tag: v20250811012137
+    tag: v20250922060458
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 8080
-
 #
 # Database Values
 #
 apiBookingDatabase:
   replicaCount: 1
-
   auth:
     rootPassword: "rookies"
     database: booking
     username: rookies
     password: rookies
-
   service:
     type: ClusterIP
     port: 3306
-
   persistence:
     enabled: true
     size: 8Gi
     storageClass: "gp2"
-
 #
 # Redis Values
 #
 apiBookingRedis:
   replicaCount: 1
-
   image:
     repository: redis
     tag: "7.2.4"
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 6379
-
   persistence:
     enabled: true
     size: 7Gi
