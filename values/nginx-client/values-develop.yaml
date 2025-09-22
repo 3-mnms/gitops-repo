@@ -3,7 +3,7 @@ nginxClient:
   image:
     registry: rookiesdogun
     repository: nginx-client
-    tag: v20250922061334
+    tag: v20250922080724
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
