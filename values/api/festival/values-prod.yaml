@@ -34,8 +34,8 @@ apiFestivalAi:
   image:
     registry: rookiesdogun
     # 후에 api-festival-ai 로 변경 필요
-    repository: tekcit-ai
-    tag: test
+    repository: api-festival-ai
+    tag: v20250922060830
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
