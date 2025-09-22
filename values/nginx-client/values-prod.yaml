@@ -1,18 +1,13 @@
 nginxClient:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: nginx-client
     tag: latest
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 80
-
-
-
   ingress:
     mode: aws
     port:
@@ -21,27 +16,21 @@ nginxClient:
     path: /
     pathType: Prefix
     tls: true
-
     gce:
       ipName: rookies-tekcit-static-ip
       backendConfigName: api-gateway-backendconfig
       tlsSecret: nginx-client-tls-secret
     aws:
-      scheme: "internet-facing" 
+      scheme: "internet-facing"
       serviceAccountName: aws-load-balancer-controller
-
-
 # 모바일 설정 추가
 nginxClientMobile:
   replicaCount: 1
-
   image:
     registry: rookiesdogun
     repository: nginx-mobile
-    tag: latest
+    tag: v20250922060454
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 80
-    
