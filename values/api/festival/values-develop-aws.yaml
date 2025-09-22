@@ -3,7 +3,7 @@ apiFestival:
   image:
     registry: rookiesdogun
     repository: api-festival
-    tag: v20250911043224
+    tag: v20250919054659
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -16,11 +16,11 @@ apiFestival:
     password: rookies
   resources:
     requests:
-      cpu: "256m"
+      cpu: "300m"
       memory: "512Mi"
     limits:
-      cpu: "500m"
-      memory: "1024Mi"
+      cpu: "400m"
+      memory: "600Mi"
 apiFestivalDatabase:
   replicaCount: 1
   auth:
@@ -42,7 +42,7 @@ apiFestivalAi:
     registry: rookiesdogun
     # 후에 api-festival-ai 로 변경 필요
     repository: api-festival-ai
-    tag: v0.1
+    tag: v20250918012447
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP

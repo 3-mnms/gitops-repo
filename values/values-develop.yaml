@@ -1,7 +1,9 @@
 argo-cd:
   enabled: false
   
-
+nodeExporter: 
+  enabled: false
+  
 global:
   service:
     # Kafka
